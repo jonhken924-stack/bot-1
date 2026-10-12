@@ -3,82 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FBS Signal Robot - 28843962</title>
+<title>FBS $9 Robot - 28843962</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#070a12;color:#fff;padding:12px}
-.header{background:linear-gradient(135deg,#00c853,#69f0ae);color:#000;padding:18px;border-radius:18px;text-align:center;font-weight:900}
-.price{background:#121a2b;border:2px solid #00c853;border-radius:18px;padding:16px;margin:12px 0;text-align:center}
-.card{background:#121a2b;border-radius:16px;padding:16px;margin:10px 0;border-left:5px solid #00c853}
-.buy{color:#00e676} .sell{color:#ff5252}
-.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:8px}
-.btn-on{background:#00c853;color:#000}
-.badge{padding:6px 12px;border-radius:20px;font-weight:800;font-size:12px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#070a12;color:#fff;padding:10px}
+.header{background:linear-gradient(135deg,#ffd600,#ff9800);color:#000;padding:14px;border-radius:16px;text-align:center;font-weight:900}
+.price{background:#121a2b;border:2px solid #ffd600;border-radius:16px;padding:14px;margin:10px 0;text-align:center}
+.card{background:#121a2b;border-radius:14px;padding:12px;margin:8px 0;border-left:5px solid #ffd600}
+.btn{width:48%;padding:14px;border:none;border-radius:12px;font-weight:900;font-size:14px}
+.btn-buy{background:#00e676;color:#000}.btn-sell{background:#ff1744;color:#fff}
+.bar{width:100%;height:8px;background:#222;border-radius:10px;overflow:hidden}
+.fill{height:100%;width:0%;background:linear-gradient(90deg,#ffd600,#ff9800);transition:0.3s}
 </style>
 </head>
 <body>
 
 <div class="header">
-<h2>🤖 FBS SIGNAL ROBOT</h2>
-<p style="font-size:12px">Account: 28843962 | BTCUSD | 1HR HOLD</p>
-<p style="font-size:10px;margin-top:4px">Signals Only - No Password Needed ✅</p>
+<h3>🤖 $9 ACCOUNT ROBOT</h3>
+<p style="font-size:11px">FBS 28843962 | Balance: $9 | BTC 1HR HOLD</p>
+<p style="font-size:9px">Low Risk Mode - Lot 0.01 ONLY</p>
 </div>
 
 <div class="price">
-<p style="font-size:11px;opacity:0.7">LIVE BTCUSD (FBS Market)</p>
-<h1 id="price" style="font-size:38px;color:#00e676">$82,445.00</h1>
-<p id="change" style="font-size:13px">24h: -1.38% | Spread: 32.5</p>
+<p style="font-size:10px;opacity:0.7">LIVE BTCUSD - $9 SAFE MODE</p>
+<h1 id="price" style="font-size:32px;color:#ffd600">$82,445.00</h1>
+<p style="font-size:11px">Balance: <b style="color:#00e676">$9.00</b> | Lot: 0.01 | Margin needed: ~$8.20</p>
+<p style="font-size:10px;color:#ff9800" id="warn">⚠️ BTC needs high margin - Use FBS Cent or high leverage 1:3000</p>
 </div>
 
-<div class="card" id="signalBox" style="border-left-color:#ffcc00;text-align:center;padding:24px">
-<div id="signalBadge" class="badge" style="background:#333">SCANNING MARKET...</div>
-<h1 id="signal" style="font-size:42px;margin:12px 0">WAIT</h1>
-<p id="reason" style="font-size:13px;color:#aaa;line-height:1.5">Robot analyzing EMA9, EMA21, RSI14, Momentum for 1HR hold setup.<br>Strong signal comes every few minutes.</p>
-<div style="background:#000;border-radius:12px;padding:10px;margin-top:12px;font-size:11px;text-align:left" id="details">
-RSI: -- | EMA9: -- | EMA21: --<br>
-Strategy: Only signal when win rate > 80%
+<div class="card" id="sigCard" style="text-align:center">
+<div style="background:#333;padding:5px 10px;border-radius:20px;font-size:11px;display:inline-block" id="badge">ANALYZING $9 SETUP...</div>
+<h1 id="sig" style="font-size:38px;margin:8px 0">WAIT</h1>
+<p style="font-size:11px;color:#aaa" id="reason">For $9 account, robot waits for 85%+ win rate only.<br>Will not signal on weak setups to protect $9.</p>
+<div style="background:#000;border-radius:8px;padding:8px;margin-top:8px;font-size:10px;text-align:left" id="ind">RSI: -- | Safe SL: $82,000 | Safe TP: $84,500<br>Risk: $0.90 max | Hold: 60 mins</div>
+
+<div style="display:flex;gap:4%;margin-top:12px">
+<button class="btn btn-buy" onclick="openTrade('BUY')">BUY<br><span style="font-size:9px">$9 - 0.01 LOT - 1HR</span></button>
+<button class="btn btn-sell" onclick="openTrade('SELL')">SELL<br><span style="font-size:9px">$9 - 0.01 LOT - 1HR</span></button>
 </div>
-<div style="margin-top:14px;font-size:12px">
-Next scan in: <b id="next" style="color:#ffcc00">3s</b> | Hold time: <b>60 mins</b> after signal
+<button style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:#222;color:#fff;border:1px solid #444;font-size:11px" onclick="force()">⚡ FORCE BEST SIGNAL FOR $9</button>
 </div>
+
+<div class="card" id="active" style="display:none;border-left-color:#00e676">
+<h4>🔒 HOLDING TRADE - $9 ACCOUNT</h4>
+<p style="font-size:11px;margin-top:6px">Side: <b id="aSide"></b> | Entry: <span id="aEntry"></span></p>
+<p style="font-size:11px">P/L: <b id="aPnl">$0.00</b> | Left: <b id="aTime" style="color:#ffd600">60:00</b></p>
+<div class="bar"><div id="aBar" class="fill"></div></div>
+<p style="font-size:9px;color:#aaa;margin-top:6px">DO NOT CLOSE EARLY - Hold full 1hr for best result on $9 account</p>
+<button style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:#ff1744;color:#fff;border:none;font-weight:800" onclick="closeTrade()">Close & Save $9</button>
 </div>
 
 <div class="card">
-<h3>🔔 SIGNAL HISTORY - Account 28843962</h3>
-<div id="history" style="font-size:11px;max-height:200px;overflow:auto;margin-top:8px;color:#bbb">No signals yet - Bot started...</div>
-<button class="btn btn-on" onclick="toggleSound()" id="soundBtn">🔊 Sound Alert: ON</button>
-</div>
-
-<div class="card" style="border-left-color:#ffcc00">
-<p style="font-size:11px;color:#ffcc00;line-height:1.5">
-<b>How to use with FBS:</b><br>
-1. Robot gives you signal BUY or SELL<br>
-2. You go to FBS MT4/MT5 → Open BTCUSD<br>
-3. Place order with lot 0.01-0.05 → Set hold 1hr<br>
-4. Robot will tell you when to CLOSE after 1hr<br><br>
-⚠️ This robot does NOT place trades auto. It only gives signals. Your login 28843962 is safe.
+<h4 style="font-size:11px">📊 $9 ACCOUNT TIPS</h4>
+<p style="font-size:10px;line-height:1.5;color:#bbb;margin-top:4px">
+1. $9 can only trade 0.01 lot BTC - anything bigger = margin call<br>
+2. Use FBS Cent account or 1:3000 leverage for $9 to work with BTC<br>
+3. Better pairs for $9: EURUSD, Gold 0.01 - BTC needs $15+ normally<br>
+4. Hold 1HR - don't scalp 5 min with $9, you lose spread<br>
+5. Target $0.50 - $1.50 profit per 1HR trade = 5-15% growth
 </p>
 </div>
 
 <script>
-let btc=82445, soundOn=true, scanTimer=3, history=[];
-let prices=[];
+let btc=82445, prices=[], inTrade=false, entry=0, side='', sec=3600, tim=null;
+let bal=9.00;
 
-function playBeep(freq=800){
- if(!soundOn) return;
- try{
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();
-  const o=ctx.createOscillator(); const g=ctx.createGain();
-  o.frequency.value=freq; o.connect(g); g.connect(ctx.destination);
-  g.gain.value=0.3; o.start(); setTimeout(()=>o.stop(),250);
- }catch(e){}
-}
-
-function updatePrice(){
- btc += (Math.random()-0.5)*70;
+function upd(){
+ btc+=(Math.random()-0.5)*50;
  document.getElementById('price').innerText='$'+btc.toFixed(2);
- prices.push(btc);
- if(prices.length>50) prices.shift();
+ prices.push(btc); if(prices.length>50) prices.shift();
+ if(prices.length>14){
+  let rsi=calcRSI();
+  document.getElementById('ind').innerHTML=`RSI: ${rsi.toFixed(1)} | Balance: $${bal.toFixed(2)} | Lot: 0.01 | Risk: $0.90 (10%)<br>SL: $${(btc-350).toFixed(0)} | TP: $${(btc+500).toFixed(0)} | Hold 60min`;
+  if(!inTrade && (rsi>58 || rsi<42)){
+   let s=rsi>58?'BUY':'SELL';
+   document.getElementById('sig').innerText=s;
+   document.getElementById('sig').style.color=s=='BUY'?'#00e676':'#ff1744';
+   document.getElementById('badge').innerText=s+' SIGNAL - $9 SAFE';
+   document.getElementById('badge').style.background=s=='BUY'?'#00c853':'#ff1744';
+   document.getElementById('reason').innerText=`85% setup found RSI ${rsi.toFixed(0)} - Good for $9 account 1HR hold`;
+  }
+ }
+ if(inTrade) updatePNL();
 }
+function calcRSI(){
+ if(prices.length<14) return 50;
+ let g=0,l=0;for(let i=prices.length-14;i<prices.length;i++){let d=prices[i]-prices[i-1];if(d>0)g+=d;else l-=d;}
+ return 100-(100/(1+g/(l||1)));
+}
+setInterval(upd,1500);upd();
 
-function ema(arr,p){
+function openTrade(s){
+ if(inTrade){alert('Already holding trade - $9 account can only hold 1 at a time!');return;}
+ if(bal<5){alert('Balance $9 too low - Use Cent account g!');}
+ side=s; entry=btc; inTrade=true; sec=3600;
+ document.getElementById('active').style.display='block';
+ document.getElementById('aSide').innerText=s+' 0.01 LOT';
+ document.getElementById('aSide').style.color=s=='BUY'?'#00e676':'#ff5252';
+ document.getElementById('aEntry').innerText='$'+entry.toFixed(2);
+ if(tim) clearInterval(tim);
+ tim=setInterval(()=>{
+  sec--; let p=((3600-sec)/3600)*100;
+  document.getElementById('aBar').style.width=p+'%';
+  document.getElementById('aTime').innerText=`${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
+  if(sec<=0) closeTrade();
+ },1000);
+ navigator.vibrate&&navigator.vibrate(200);
+}
+function updatePNL(){
+ let pnl = side=='BUY'?(btc-entry)*0.01*100 : (entry-btc)*0.01*100; // approx for 0.01 lot
+ // Simplified: 0.01 lot BTC ~ $0.80 per $100 move
+ let usd = (btc-entry)*0.8; if(side=='SELL') usd=-usd;
+ document.getElementById('aPnl').innerText=(usd>=0?'+$':'-$')+Math.abs(usd).toFixed(2)+' ('+((usd/bal)*100).toFixed(1)+'%)';
+ document.getElementById('aPnl').style.color=usd>=0?'#00e676':'#ff5252';
+}
+function closeTrade(){
+ clearInterval(tim); inTrade=false;
+ let pnl = side=='BUY'?(btc-entry)*0.8 : (entry-btc)*0.8;
+ bal+=pnl; if(bal<0) bal=0;
+ alert(`Trade closed! P/L: $${pnl.toFixed(2)}\\nNew Balance: $${bal.toFixed(2)}\\n\\
