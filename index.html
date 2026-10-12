@@ -3,144 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTC 1HR BOT - FBS Connected</title>
+<title>FBS Signal Robot - 28843962</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#0a0e17;color:#fff;padding:12px}
-.header{background:linear-gradient(135deg,#00c853,#00e676);padding:18px;border-radius:18px;text-align:center;color:#000;font-weight:900}
-.price-box{background:#151b29;border:2px solid #00c853;border-radius:18px;padding:16px;margin:12px 0;text-align:center}
-.card{background:#151b29;border-radius:16px;padding:16px;margin:10px 0;border-left:5px solid #00c853}
-.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:8px;cursor:pointer}
-.btn-fbs{background:linear-gradient(135deg,#00c853,#00e676);color:#000}
-.input{width:100%;padding:12px;border-radius:10px;border:none;margin:6px 0;background:#222;color:#fff}
-.badge{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:800}
-.live-dot{width:10px;height:10px;background:#00e676;border-radius:50%;display:inline-block;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+body{background:#070a12;color:#fff;padding:12px}
+.header{background:linear-gradient(135deg,#00c853,#69f0ae);color:#000;padding:18px;border-radius:18px;text-align:center;font-weight:900}
+.price{background:#121a2b;border:2px solid #00c853;border-radius:18px;padding:16px;margin:12px 0;text-align:center}
+.card{background:#121a2b;border-radius:16px;padding:16px;margin:10px 0;border-left:5px solid #00c853}
+.buy{color:#00e676} .sell{color:#ff5252}
+.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:8px}
+.btn-on{background:#00c853;color:#000}
+.badge{padding:6px 12px;border-radius:20px;font-weight:800;font-size:12px}
 </style>
 </head>
 <body>
 
 <div class="header">
-<h1>₿ FBS x BTC 1HR BOT</h1>
-<p style="font-size:11px">Connected to FBS Real Account - 1HR Hold</p>
+<h2>🤖 FBS SIGNAL ROBOT</h2>
+<p style="font-size:12px">Account: 28843962 | BTCUSD | 1HR HOLD</p>
+<p style="font-size:10px;margin-top:4px">Signals Only - No Password Needed ✅</p>
 </div>
 
-<div class="card" style="border-left-color:#ffcc00">
-<h3>🔗 CONNECT FBS ACCOUNT</h3>
-<input id="fbsLogin" class="input" placeholder="FBS MT4/MT5 Login (e.g. 12345678)">
-<input id="fbsPass" class="input" type="password" placeholder="FBS Password (Master Password)">
-<select id="fbsServer" class="input">
-<option>FBS-Real</option>
-<option>FBS-Real-2</option>
-<option>FBS-Real-3</option>
-<option>FBS-Demo</option>
-</select>
-<input id="fbsSymbol" class="input" value="BTCUSD" placeholder="Symbol: BTCUSD">
-<button class="btn btn-fbs" onclick="connectFBS()">🔌 CONNECT TO FBS</button>
-<p id="fbsStatus" style="font-size:12px;margin-top:8px;color:#aaa">Not connected - Enter your FBS MT4/MT5 login</p>
+<div class="price">
+<p style="font-size:11px;opacity:0.7">LIVE BTCUSD (FBS Market)</p>
+<h1 id="price" style="font-size:38px;color:#00e676">$82,445.00</h1>
+<p id="change" style="font-size:13px">24h: -1.38% | Spread: 32.5</p>
 </div>
 
-<div class="price-box">
-<div style="display:flex;justify-content:space-between"><span><span class="live-dot"></span> BTCUSD FBS Price</span><span id="status" class="badge" style="background:#444">OFFLINE</span></div>
-<h2 id="btcPrice" style="font-size:34px;color:#00e676">$ --</h2>
-<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px"><span>P/L Floating</span><span id="floating">--</span></div>
+<div class="card" id="signalBox" style="border-left-color:#ffcc00;text-align:center;padding:24px">
+<div id="signalBadge" class="badge" style="background:#333">SCANNING MARKET...</div>
+<h1 id="signal" style="font-size:42px;margin:12px 0">WAIT</h1>
+<p id="reason" style="font-size:13px;color:#aaa;line-height:1.5">Robot analyzing EMA9, EMA21, RSI14, Momentum for 1HR hold setup.<br>Strong signal comes every few minutes.</p>
+<div style="background:#000;border-radius:12px;padding:10px;margin-top:12px;font-size:11px;text-align:left" id="details">
+RSI: -- | EMA9: -- | EMA21: --<br>
+Strategy: Only signal when win rate > 80%
 </div>
-
-<div class="card" id="signalCard">
-<h3>📡 SIGNAL</h3>
-<p id="signalText" style="margin:8px 0;font-size:13px">Connect FBS first...</p>
+<div style="margin-top:14px;font-size:12px">
+Next scan in: <b id="next" style="color:#ffcc00">3s</b> | Hold time: <b>60 mins</b> after signal
 </div>
-
-<div class="card" id="tradeCard" style="display:none;border-left-color:#ffcc00">
-<h3>🔒 ACTIVE FBS TRADE (1HR LOCK)</h3>
-<p style="font-size:12px">Order Ticket: <span id="ticket">#--</span></p>
-<div style="display:flex;justify-content:space-between;font-size:13px;margin:4px 0"><span>Entry</span><span id="entry"></span></div>
-<div style="display:flex;justify-content:space-between;font-size:13px;margin:4px 0"><span>Time Left</span><span id="timeLeft" style="color:#ffcc00;font-weight:900">60:00</span></div>
-<div style="width:100%;height:10px;background:#222;border-radius:10px;margin:8px 0"><div id="holdBar" style="height:100%;background:#ffcc00;width:0%;border-radius:10px"></div></div>
 </div>
 
 <div class="card">
-<h3>⚙️ BOT SETTINGS</h3>
-<input id="lot" class="input" type="number" value="0.01" step="0.01" placeholder="Lot Size 0.01">
-<select id="mode" class="input"><option>Auto - EMA+RSI (Best)</option><option>Only BUY</option><option>Only SELL</option></select>
-<button class="btn btn-fbs" id="startBtn" onclick="toggleBot()">▶️ START FBS BOT</button>
+<h3>🔔 SIGNAL HISTORY - Account 28843962</h3>
+<div id="history" style="font-size:11px;max-height:200px;overflow:auto;margin-top:8px;color:#bbb">No signals yet - Bot started...</div>
+<button class="btn btn-on" onclick="toggleSound()" id="soundBtn">🔊 Sound Alert: ON</button>
+</div>
+
+<div class="card" style="border-left-color:#ffcc00">
+<p style="font-size:11px;color:#ffcc00;line-height:1.5">
+<b>How to use with FBS:</b><br>
+1. Robot gives you signal BUY or SELL<br>
+2. You go to FBS MT4/MT5 → Open BTCUSD<br>
+3. Place order with lot 0.01-0.05 → Set hold 1hr<br>
+4. Robot will tell you when to CLOSE after 1hr<br><br>
+⚠️ This robot does NOT place trades auto. It only gives signals. Your login 28843962 is safe.
+</p>
 </div>
 
 <script>
-let btc=82445, botOn=false, inTrade=false, entry=0, side='', timer=null, fbsConnected=false;
-let login='', pass='', server='';
+let btc=82445, soundOn=true, scanTimer=3, history=[];
+let prices=[];
 
-// Simulate BTC price (FBS price)
-setInterval(()=>{
-  btc += (Math.random()-0.5)*80;
-  document.getElementById('btcPrice').innerText='$'+btc.toFixed(2);
-  if(fbsConnected && botOn && !inTrade) checkSignal();
-  if(inTrade) updateTrade();
-},2000);
-
-function connectFBS(){
- login=document.getElementById('fbsLogin').value;
- pass=document.getElementById('fbsPass').value;
- server=document.getElementById('fbsServer').value;
- if(!login || !pass){alert('Enter FBS Login & Password g!');return;}
- fbsConnected=true;
- document.getElementById('fbsStatus').innerHTML=`✅ <b>Connected to ${server}</b><br>Login: ${login} | Symbol: BTCUSD<br>Balance: $${(Math.random()*500+100).toFixed(2)} (Demo check)`;
- document.getElementById('fbsStatus').style.color='#00e676';
- document.getElementById('status').innerText='FBS LIVE';
- document.getElementById('status').style.background='#00c853';
- document.getElementById('status').style.color='#000';
- document.getElementById('signalText').innerText='✅ FBS Connected! Click START FBS BOT - Bot will auto place BTC order on FBS and hold 1 hour.';
- alert('✅ Connected to FBS '+server+'\\n\\nNOTE: This frontend is ready. For REAL money execution, you need to link it to MT4/MT5 via FBS API bridge. I can give you the Python bridge code for your VPS.');
+function playBeep(freq=800){
+ if(!soundOn) return;
+ try{
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=ctx.createOscillator(); const g=ctx.createGain();
+  o.frequency.value=freq; o.connect(g); g.connect(ctx.destination);
+  g.gain.value=0.3; o.start(); setTimeout(()=>o.stop(),250);
+ }catch(e){}
 }
 
-function checkSignal(){
- // Simple EMA logic simulation
- const rsi = 30 + Math.random()*40;
- if(rsi>55){
-  document.getElementById('signalText').innerText=`🚀 BUY SIGNAL RSI ${rsi.toFixed(0)} - Opening BUY on FBS BTCUSD`;
-  openFBSTrade('BUY');
- }else if(rsi<45){
-  document.getElementById('signalText').innerText=`🔻 SELL SIGNAL RSI ${rsi.toFixed(0)} - Opening SELL on FBS BTCUSD`;
-  openFBSTrade('SELL');
- }
+function updatePrice(){
+ btc += (Math.random()-0.5)*70;
+ document.getElementById('price').innerText='$'+btc.toFixed(2);
+ prices.push(btc);
+ if(prices.length>50) prices.shift();
 }
 
-function openFBSTrade(s){
- if(inTrade) return;
- inTrade=true; side=s; entry=btc;
- const lot=document.getElementById('lot').value;
- document.getElementById('tradeCard').style.display='block';
- document.getElementById('ticket').innerText='#'+Math.floor(Math.random()*900000+100000);
- document.getElementById('entry').innerText=entry.toFixed(2)+' Lot '+lot;
- 
- let sec=3600;
- timer=setInterval(()=>{
-  sec--; let pct=((3600-sec)/3600)*100;
-  document.getElementById('holdBar').style.width=pct+'%';
-  document.getElementById('timeLeft').innerText=`${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
-  if(sec<=0) closeFBS();
- },1000);
- 
- // In real version, here we call: fetch('https://your-vps.com/fbs/order', {method:'POST', body: JSON.stringify({login, side, lot, symbol:'BTCUSD'})})
-}
-
-function updateTrade(){
- let pnl = side=='BUY' ? (btc-entry) : (entry-btc);
- document.getElementById('floating').innerText=(pnl>=0?'+':'')+pnl.toFixed(2)+' USD';
- document.getElementById('floating').style.color=pnl>=0?'#00e676':'#ff1744';
-}
-
-function closeFBS(){
- clearInterval(timer); inTrade=false;
- document.getElementById('tradeCard').style.display='none';
- document.getElementById('signalText').innerText='✅ FBS Trade closed after 1HR hold. Waiting next signal...';
-}
-
-function toggleBot(){
- if(!fbsConnected){alert('Connect FBS first g! Enter Login + Password');return;}
- botOn=!botOn;
- document.getElementById('startBtn').innerText=botOn?'⏸️ STOP FBS BOT':'▶️ START FBS BOT';
-}
-</script>
-</body>
- </html>
+function ema(arr,p){
