@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC 1HR HOLD BOT - Maseno Edition</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#0a0e17;color:#fff;min-height:100vh;padding:12px}
+.header{background:linear-gradient(135deg,#f7931a,#ffcc00);color:#000;padding:18px;border-radius:18px;text-align:center;font-weight:900}
+.header h1{font-size:20px}
+.price-box{background:#151b29;border:2px solid #f7931a;border-radius:18px;padding:16px;margin:12px 0;text-align:center}
+.price-box h2{font-size:36px;color:#f7931a}
+.badge{display:inline-block;padding:5px 12px;border-radius:20px;font-weight:800;font-size:12px;margin:4px}
+.buy{background:#00e676;color:#000} .sell{background:#ff1744;color:#fff} .wait{background:#444;color:#fff}
+.card{background:#151b29;border-radius:16px;padding:16px;margin:10px 0;border-left:5px solid #f7931a}
+.btn{width:100%;padding:16px;border:none;border-radius:14px;font-weight:900;font-size:16px;margin-top:8px;cursor:pointer}
+.btn-start{background:linear-gradient(135deg,#f7931a,#ff9800);color:#000}
+.btn-stop{background:#222;color:#fff;border:1px solid #444}
+.hold-bar{width:100%;height:12px;background:#222;border-radius:10px;overflow:hidden;margin:10px 0}
+.hold-fill{height:100%;background:linear-gradient(90deg,#f7931a,#ffcc00);width:0%;transition:0.5s}
+.row{display:flex;justify-content:space-between;font-size:13px;margin:4px 0}
+.live-dot{width:10px;height:10px;background:#00e676;border-radius:50%;display:inline-block;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1>₿ BTC 1HR HOLD BOT</h1>
+<p style="font-size:11px;margin-top:4px">Auto BUY/SELL + Hold 1 Hour + Auto Close</p>
+</div>
+
+<div class="price-box">
+<div class="row"><span><span class="live-dot"></span> LIVE BTC/USD</span><span id="status" class="badge wait">LOADING</span></div>
+<h2 id="btcPrice">$ --</h2>
+<div class="row"><span>24h Change</span><span id="change">--</span></div>
+<div class="row"><span>Signal Strength</span><span id="strength">--</span></div>
+</div>
+
+<div class="card" id="signalCard">
+<h3 style="color:#f7931a">📡 BOT SIGNAL</h3>
+<p id="signalText" style="margin:8px 0;font-size:14px">Waiting for setup...</p>
+<div id="indicators" style="font-size:12px;line-height:1.6;color:#aaa"></div>
+</div>
+
+<div class="card" id="tradeCard" style="display:none;border-left-color:#00e676">
+<h3>🔒 ACTIVE TRADE - 1HR HOLD</h3>
+<div class="row"><span>Type</span><span id="tradeType" style="font-weight:900"></span></div>
+<div class="row"><span>Entry Price</span><span id="entryPrice"></span></div>
+<div class="row"><span>Current Price</span><span id="currPrice"></span></div>
+<div class="row"><span>P/L</span><span id="pnl" style="font-weight:900"></span></div>
+<div class="hold-bar"><div class="hold-fill" id="holdFill"></div></div>
+<div class="row"><span>Time Left</span><span id="timeLeft" style="font-weight:900;color:#f7931a">60:00</span></div>
+<p style="font-size:11px;color:#888;margin-top:6px">Trade locked for 1 hour - No early close. Bot will auto close at 00:00</p>
+</div>
+
+<div class="card">
+<h3>⚙️ SETTINGS</h3>
+<div class="row"><span>Trade Amount (USD)</span><input id="amount" type="number" value="100" style="width:80px;padding:6px;border-radius:8px;border:none;text-align:center"></div>
+<div class="row"><span>Strategy</span><select id="strat" style="padding:6px;border-radius:8px;border:none"><option value="ema_rsi">EMA + RSI (Best)</option><option value="scalp">Scalp Momentum</option><option value="breakout">Breakout</option></select></div>
+<button class="btn btn-start" id="startBtn" onclick="toggleBot()">▶️ START BTC BOT</button>
+<button class="btn btn-stop" onclick="resetBot()">🔄 RESET</button>
+</div>
+
+<div class="card" style="border-left-color:#666">
+<h4 style="font-size:12px">📊 TRADE HISTORY (Last 10)</h4>
+<div id="history" style="font-size:11px;margin-top:8px;max-height:120px;overflow-y:auto;color:#aaa">No trades yet</div>
+</div>
+
+<script>
+let btc=0, botOn=false, inTrade=false, entry=0, tradeSide='', holdInterval=null, priceHistory=[];
+let totalPnl=0;
+
+async function fetchBTC(){
+ try{
+  const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+  const data = await res.json();
+  btc = data.bitcoin.usd;
+  document.getElementById('btcPrice').innerText = '$' + btc.toLocaleString();
+  const ch = data.bitcoin.usd_24h_change.toFixed(2);
+  document.getElementById('change').innerText = ch + '%';
+  document.getElementById('change').style.color = ch>=0?'#00e676':'#ff1744';
+  priceHistory.push(btc);
+  if(priceHistory.length>50) priceHistory.shift();
+  if(botOn && !inTrade) analyze();
+  if(inTrade) updateTrade();
+ }catch(e){document.getElementById('status').innerText='OFFLINE';}
+}
+setInterval(fetchBTC,3000); fetchBTC();
+
+function ema(arr, period){
+ let k=2/(period+1); let emaArr=[arr[0]];
+ for(let i=1;i<arr.length;i++) emaArr.push(arr[i]*k + emaArr[i-1]*(1-k));
+ return emaArr[emaArr.length-1];
+}
+function rsi(arr, period=14){
+ if(arr.length<period+1) return 50;
+ let gains=0,losses=0;
+ for(let i=arr.length-period;i<arr.length;i++){
+  let diff=arr[i]-arr[i-1];
+  if(diff>=0) gains+=diff; else losses-=diff;
+ }
+ let rs = gains/(losses||1);
+ return 100 - (100/(1+rs));
+}
+
+function analyze(){
+ if(priceHistory.length<20) return;
+ const fast = ema(priceHistory.slice(-20), 9);
+ const slow = ema(priceHistory.slice(-30), 21);
+ const r = rsi(priceHistory, 14);
+ const momentum = ((priceHistory[priceHistory.length-1] - priceHistory[priceHistory.length-5])/priceHistory[priceHistory.length-5])*100;
+
+ document.getElementById('indicators').innerHTML = `EMA9: ${fast.toFixed(1)} | EMA21: ${slow.toFixed(1)}<br>RSI: ${r.toFixed(1)} | Momentum: ${momentum.toFixed(3)}%`;
+ 
+ let signal='WAIT', strength=0, txt='';
+ if(fast>slow && r>40 && r<70 && momentum>0.05){ signal='BUY'; strength=85; txt=`🚀 BULLISH: EMA Bull cross + RSI ${r.toFixed(0)} - Strong BUY for 1HR hold`; }
+ else if(fast<slow && r<60 && r>30 && momentum<-0.05){ signal='SELL'; strength=82; txt=`🔻 BEARISH: EMA Bear cross + RSI ${r.toFixed(0)} - Strong SELL for 1HR hold`; }
+ else { txt=`⏳ WAIT: Market sideways - EMA diff ${(fast-slow).toFixed(1)} - Waiting for breakout`; strength=30; }
+
+ document.getElementById('status').innerText=signal;
+ document.getElementById('status').className='badge '+(signal=='BUY'?'buy':signal=='SELL'?'sell':'wait');
+ document.getElementById('signalText').innerText=txt;
+ document.getElementById('strength').innerText=strength+'%';
+
+ // Auto enter if strong
+ if(strength>80 && !inTrade){
+  openTrade(signal);
+ }
+}
+
+function openTrade(side){
+ inTrade=true; tradeSide=side; entry=btc;
+ const amount = parseFloat(document.getElementById('amount').value)||100;
+ document.getElementById('tradeCard').style.display='block';
+ document.getElementById('tradeType').innerText=side + ' ₿';
+ document.getElementById('tradeType').style.color=side=='BUY'?'#00e676':'#ff1744';
+ document.getElementById('entryPrice').innerText='$'+entry.toLocaleString();
+ document.getElementById('signalCard').style.borderLeftColor = side=='BUY'?'#00e676':'#ff1744';
+ 
+ let secondsLeft = 3600; // 1 hour = 3600 sec
+ holdInterval = setInterval(()=>{
+  secondsLeft--;
+  let pct = ((3600-secondsLeft)/3600)*100;
+  document.getElementById('holdFill').style.width=pct+'%';
+  let m = Math.floor(secondsLeft/60); let s = secondsLeft%60;
+  document.getElementById('timeLeft').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  if(secondsLeft<=0) closeTrade();
+ },1000);
+ 
+ // Notify
+ if(navigator.vibrate) navigator.vibrate(200);
+}
+
+function updateTrade(){
+ document.getElementById('currPrice').innerText='$'+btc.toLocaleString();
+ let pnl = tradeSide=='BUY' ? ((btc-entry)/entry)*100 : ((entry-btc)/entry)*100;
+ let pnlUSD = (pnl/100)* (parseFloat(document.getElementById('amount').value)||100);
+ document.getElementById('pnl').innerText = pnl.toFixed(2)+'% ($'+pnlUSD.toFixed(2)+')';
+ document.getElementById('pnl').style.color = pnl>=0?'#00e676':'#ff1744';
+}
+
+function closeTrade(){
+ clearInterval(holdInterval);
+ let pnl = tradeSide=='BUY' ? ((btc-entry)/entry)*100 : ((entry-btc)/entry)*100;
+ let pnlUSD = (pnl/100)* (parseFloat(document.getElementById('amount').value)||100);
+ totalPnl+=pnlUSD;
+ 
+ let hist = document.getElementById('history');
+ let row = `<div style="border-bottom:1px solid #222;padding:4px 0">${new Date().toLocaleTimeString()} | ${tradeSide} @ ${entry.toFixed(0)} → ${btc.toFixed(0)} | <b style="color:${pnl>=0?'#00e676':'#ff1744'}">${pnl.toFixed(2)}% ($${pnlUSD.toFixed(2)})</b> | Total: $${totalPnl.toFixed(2)}</div>`;
+ hist.innerHTML = row + hist.innerHTML;
+ 
+ inTrade=false;
+ document.getElementById('tradeCard').style.display='none';
+ document.getElementById('holdFill').style.width='0%';
+ document.getElementById('signalText').innerText='✅ Trade closed after 1HR hold. Scanning for next signal...';
+}
+
+function toggleBot(){
+ botOn=!botOn;
+ document.getElementById('startBtn').innerText = botOn?'⏸️ STOP BOT':'▶️ START BTC BOT';
+ document.getElementById('startBtn').style.background = botOn?'#222':'linear-gradient(135deg,#f7931a,#ff9800)';
+ document.getElementById('status').innerText = botOn?'SCANNING':'STOPPED';
+ if(botOn) analyze();
+}
+
+function resetBot(){
+ clearInterval(holdInterval); inTrade=false; botOn=false;
+ document.getElementById('tradeCard').style.display='none';
+ document.getElementById('startBtn').innerText='▶️ START BTC BOT';
+ document.getElementById('history').innerHTML='No trades yet';
+}
+</script>
+</body>
+  </html>
